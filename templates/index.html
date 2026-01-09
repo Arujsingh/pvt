@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Multi-Tab View Counter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+        
+        .status-container.active {
+            display: block !important;
+        }
+        
+        .status-container {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .status-box {
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .status-text {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-label {
+            color: #999;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .tabs-status {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .tab-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        
+        .tab-item:last-child {
+            border-bottom: none;
+        }
+        
+        .tab-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tab-number {
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 15px;
+            width: 50px;
+        }
+        
+        .tab-status {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .status-playing {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-paused {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        
+        .status-buffering {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .status-ended {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        
+        .watch-time {
+            color: #999;
+            font-size: 11px;
+            margin-left: 10px;
+            min-width: 70px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 YouTube Multi-Tab View Counter (Up to 50 Tabs)</h1>
+        
+        <div class="form-group">
+            <label for="url">YouTube Video URL</label>
+            <textarea id="url" placeholder="Paste your YouTube video URL (e.g., https://youtu.be/VIDEO_ID)" rows="2"></textarea>
+        </div>
+        
+        <div class="input-row">
+            <div class="form-group">
+                <label for="times">Number of Tabs (1-50)</label>
+                <input type="number" id="times" value="10" min="1" max="50">
+            </div>
+            <div class="form-group">
+                <label for="watchDuration">Watch Duration (seconds)</label>
+                <input type="number" id="watchDuration" value="30" min="10" max="300" step="10">
+            </div>
+            <div class="form-group">
+                <label for="qualitySelect">Video Quality</label>
+                <select id="qualitySelect">
+                    <option value="small" selected>144p (Very Low)</option>
+                    <option value="medium">240p (Low)</option>
+                    <option value="large">480p (High)</option>
+                    <option value="hd720">720p (HD)</option>
+                    <option value="hd1080">1080p (Full HD)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-start" onclick="startTask()">▶️ Start Tabs</button>
+            <button class="btn-reset" onclick="resetTask()">🔄 Reset</button>
+        </div>
+        
+        <div class="status-container" id="statusContainer">
+            <div class="status-box">
+                <div class="status-text" id="statusText">Initializing...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Views</div>
+                        <div class="stat-value" id="viewCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Tabs Playing</div>
+                        <div class="stat-value" id="playingCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Watch Time</div>
+                        <div class="stat-value" id="watchTimeDisplay">0s</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Watch Time</div>
+                        <div class="stat-value" id="avgWatchTime">0s</div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #333;">📊 Tab Status (Real-time)</h3>
+            <div class="tabs-status" id="tabsStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        let tabsInfo = {};
+        let bc = null;
+        let totalTabs = 0;
+        
+        function extractYouTubeVideoId(url) {
+            let videoId = '';
+            if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0];
+            } else if (url.includes('youtube.com/watch?v=')) {
+                videoId = url.split('v=')[1].split('&')[0];
+            } else if (url.includes('youtube.com/embed/')) {
+                videoId = url.split('embed/')[1].split('?')[0];
+            }
+            return videoId;
+        }
+        
+        async function startTask() {
+            const url = document.getElementById('url').value.trim();
+            const times = parseInt(document.getElementById('times').value);
+            const watchDuration = parseInt(document.getElementById('watchDuration').value);
+            const quality = document.getElementById('qualitySelect').value;
+            
+            if (!url) {
+                alert('Please enter a valid YouTube URL');
+                return;
+            }
+            
+            if (times < 1 || times > 50) {
+                alert('Number of tabs must be between 1 and 50');
+                return;
+            }
+            
+            const videoId = extractYouTubeVideoId(url);
+            if (!videoId) {
+                alert('Invalid YouTube URL');
+                return;
+            }
+            
+            totalTabs = times;
+            
+            // Setup BroadcastChannel for tab communication
+            if (bc) bc.close();
+            bc = new BroadcastChannel('youtube_viewer');
+            
+            tabsInfo = {};
+            
+            // Initialize tab tracking
+            for (let i = 1; i <= times; i++) {
+                tabsInfo[i] = {
+                    id: i,
+                    status: 'opening',
+                    watchTime: 0,
+                    playing: false,
+                    startTime: Date.now()
+                };
+            }
+            
+            // Show status
+            document.getElementById('statusContainer').classList.add('active');
+            document.getElementById('statusText').textContent = `Opening ${times} YouTube tabs...`;
+            document.getElementById('tabsStatus').innerHTML = '';
+            
+            alert(`⚠️ Allow popups! ${times} YouTube tabs will open.\n\nClick OK to continue.`);
+            
+            // Open tabs
+            let opened = 0;
+            const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            
+            for (let i = 1; i <= times; i++) {
+                setTimeout(() => {
+                    try {
+                        const tab = window.open(
+                            youtubeUrl,
+                            '_blank'
+                        );
+                        
+                        if (tab) {
+                            opened++;
+                            tabsInfo[i].status = 'opened';
+                        } else {
+                            tabsInfo[i].status = 'blocked';
+                        }
+                        
+                        updateTabsDisplay();
+                    } catch (e) {
+                        console.error('Error opening tab:', e);
+                        tabsInfo[i].status = 'error';
+                    }
+                }, i * 80);
+            }
+            
+            // Start tracking after delay
+            setTimeout(() => {
+                if (opened === 0) {
+                    alert('All popups blocked! Enable popups and try again.');
+                    document.getElementById('statusContainer').classList.remove('active');
+                    return;
+                }
+                
+                // Start backend tracking
+                fetch('/api/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: youtubeUrl,
+                        times: opened,
+                        watch_duration: watchDuration,
+                        quality: quality
+                    })
+                });
+                
+                document.getElementById('statusText').textContent = `🎬 ${opened}/${times} tabs opened! Tracking playback...`;
+                
+                // Poll for updates
+                const pollInterval = setInterval(() => {
+                    updateStats();
+                    
+                    // Check if completed
+                    const now = Date.now();
+                    let allCompleted = true;
+                    for (let i = 1; i <= times; i++) {
+                        if (tabsInfo[i] && tabsInfo[i].status !== 'ended' && tabsInfo[i].status !== 'blocked' && tabsInfo[i].status !== 'error') {
+                            if (now - tabsInfo[i].startTime < watchDuration * 1000) {
+                                allCompleted = false;
+                            }
+                        }
+                    }
+                    
+                    if (allCompleted) {
+                        clearInterval(pollInterval);
+                        document.getElementById('statusText').textContent = `✅ Complete! YouTube view count may take 30 seconds to update.`;
+                    }
+                }, 500);
+            }, times * 80 + 1000);
+            
+            // Listen for tab updates
+            bc.onmessage = (event) => {
+                const { tabId, status, watchTime } = event.data;
+                if (tabsInfo[tabId]) {
+                    tabsInfo[tabId].status = status;
+                    tabsInfo[tabId].watchTime = watchTime;
+                    tabsInfo[tabId].playing = status === 'playing';
+                    updateTabsDisplay();
+                }
+            };
+        }
+        
+        function updateTabsDisplay() {
+            const container = document.getElementById('tabsStatus');
+            let html = '';
+            
+            for (let i = 1; i <= totalTabs; i++) {
+                const info = tabsInfo[i] || { status: 'opening', watchTime: 0, playing: false };
+                
+                const statusColor = info.playing ? 'playing' : 
+                                   info.status === 'blocked' || info.status === 'error' ? 'paused' :
+                                   info.status === 'opening' || info.status === 'opened' ? 'buffering' : 'ended';
+                
+                const statusText = info.playing ? '▶️ PLAYING' :
+                                  info.status === 'blocked' ? '❌ BLOCKED' :
+                                  info.status === 'error' ? '⚠️ ERROR' :
+                                  info.status === 'opening' || info.status === 'opened' ? '⏳ LOADING' : '✅ DONE';
+                
+                const watchTimeStr = formatTime(info.watchTime);
+                
+                html += `
+                    <div class="tab-item">
+                        <span class="tab-number">#${i}</span>
+                        <span class="tab-status status-${statusColor}">${statusText}</span>
+                        <span class="watch-time">${watchTimeStr}</span>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+        }
+        
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/status');
+                const data = response.ok ? await response.json() : {};
+                
+                const playing = Object.values(tabsInfo).filter(t => t.playing).length;
+                const totalWatch = Object.values(tabsInfo).reduce((sum, t) => sum + (t.watchTime || 0), 0);
+                const avgWatch = totalTabs > 0 ? totalWatch / totalTabs : 0;
+                
+                document.getElementById('viewCount').textContent = data.views_count || totalTabs;
+                document.getElementById('playingCount').textContent = playing;
+                document.getElementById('watchTimeDisplay').textContent = formatTime(totalWatch);
+                document.getElementById('avgWatchTime').textContent = formatTime(avgWatch);
+                
+                const progress = totalTabs > 0 ? (playing / totalTabs) * 100 : 0;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressFill').textContent = Math.round(progress) + '%';
+                
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+        
+        async function resetTask() {
+            if (bc) bc.close();
+            bc = null;
+            tabsInfo = {};
+            totalTabs = 0;
+            
+            try {
+                await fetch('/api/reset', { method: 'POST' });
+            } catch (error) {
+                console.error('Error resetting:', error);
+            }
+            
+            document.getElementById('statusContainer').classList.remove('active');
+            document.getElementById('url').value = '';
+            document.getElementById('times').value = '10';
+            document.getElementById('watchDuration').value = '30';
+            document.getElementById('tabsStatus').innerHTML = '';
+            document.getElementById('viewCount').textContent = '0';
+            document.getElementById('playingCount').textContent = '0';
+            document.getElementById('watchTimeDisplay').textContent = '0s';
+            document.getElementById('avgWatchTime').textContent = '0s';
+            document.getElementById('progressFill').style.width = '0%';
+        }
+        
+        // Update stats periodically
+        setInterval(updateStats, 1000);
+    </script>
+</body>
+</html>
